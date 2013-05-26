@@ -541,3 +541,121 @@ circumference
 ; どんなときにテストに失敗するか実例でしめしなさい。
 ; 改善案は、guessがほとんど変化しなくなったこと検知すること。
 ; 実装して、小さい値と大きい値についてうまく動くかやってみなさい。
+;
+; ### 問題 1.8
+;
+; xの立法根の推測yについてのyの改善はこんなふうになる。
+; y' = (x/y^2 + 2*y)/3
+; これを元に立方根を求めてみなさい。
+;
+; 1.1.18 ブラックボックス抽象化としての手続き
+;
+; sqrtは再帰的な手続きだけど、なぜこれでうまく行くのはまだはっきり
+; 分からないかもしれない。それは1.2章でやる。
+; 
+; sqrt がいくつかの副問題に分かれたことに注意。
+;
+; sqrt
+; * sqrt-iter
+;   * good-enough
+;     * square
+;     * abs
+;   * improve
+;     * average  
+; 
+; のような構造になっていた。
+; これは、問題がたんにいくつかの部分に分かれるというだけの意味じゃない。
+; あとで使い回しが効くような、個々の仕事に分ける事ができるということが大事。
+; 仕事の依頼元から見ると、内部で何をやっているかは知らないし、知らなくもいい。
+; ブラックボックスなんだけど、とにかくインターフェースだけ分かってるという状態。
+; たとえば以下の二つのsquareは、内部は違うけど外部からは同じ手続き。
+
+(define (square x) (* x x))
+
+(define (square x) 
+  (exp (double (log x))))
+
+(define (double x) (+ x x))
+
+; ### 局所名
+;
+; 手続きを使う側にとって、実装での引数名は知らなくてもいい情報。
+; だから次の2つは同じ。
+
+(define (square x) (* x x))
+(define (square y) (* y y))
+
+; 手続きの意味は、その引数名と関係ないという原理を認めると、
+; 手続きの引数名はその本体の中で局所的じゃないといけないことが分かる。
+; たとえば good-enough? では square を使った。
+
+(define (good-enough? guess x)
+  (< (abs (- (square guess) x)) 0.001))
+
+; square の中で引数名として x を使ったとしても、それは good-enough? の中の
+; x と干渉しちゃいけない。
+; そうじゃなかったら、squareでxを使ってないか？と気にしないといけないから、
+; ブラックボックスにならない。
+;
+; 手続きの引数名は束縛変数という。手続きの定義は、引数を引数の値に束縛する。
+; 本体の中に、引数に現れない変数があったら、それは自由変数という。
+; 
+; 変数が束縛される範囲（式の集合）をスコープという。
+; 手続きの定義だと、引数名のスコープは手続きの本体だ。
+;
+; たとえば good-enough? だと、guess と x が束縛変数。
+; < と abs、-、square は自由変数だ。
+;
+; good-enough の意味は、束縛変数が変わっても、たとえば x が y になっても変わらない。
+; でも自由変数が変わったら、たとえば square が double になったら全然変わってしまう。
+;
+; ### 内部定義とブロック構造
+;
+; sqrtのプログラムをまとめるとこんなふうだ。
+
+(define (sqrt x)
+  (sqrt-iter 1.0 x))
+(define (sqrt-iter guess x)
+  (if (good-enough? guess x)
+      guess
+      (sqrt-iter (improve guess x) x)))
+(define (good-enough? guess x)
+  (< (abs (- (square guess) x)) 0.001))
+(define (improve guess x)
+  (average guess (/ x guess)))
+
+; ユーザーにとって大事なのは sqrt だけなのに、sqrt-iter とか good-enough?
+; とかがグローバル環境にこぼれてる。
+; しかもsqrt-iterは、他の手続きでも使える汎用なモジュールじゃない。
+; だからもっと大規模で何人もがつくるプログラムだと問題が大きくなる。
+; improveみたいな名前が衝突するかもしれないからだ。
+; なので、手続きの内部に手続きを定義することができる。
+
+(define (sqrt x)
+  (define (good-enough? guess x)
+    (< (abs (- (square guess) x)) 0.001))
+  (define (improve guess x)
+    (average guess (/ x guess)))
+  (define (sqrt-iter guess x)
+    (if (good-enough? guess x)
+        guess
+        (sqrt-iter (improve guess x) x)))
+  (sqrt-iter 1.0 x))
+
+; こういうのはブロック構造という。
+; これで、内部の improve は外に漏れることはない。
+; もっといいのは、引数をシンプルにできることだ。
+
+(define (sqrt x)
+  (define (good-enough? guess)
+    (< (abs (- (square guess) x)) 0.001))
+  (define (improve guess)
+    (average guess (/ x guess)))
+  (define (sqrt-iter guess)
+    (if (good-enough? guess)
+        guess
+        (sqrt-iter (improve guess))))
+  (sqrt-iter 1.0))
+
+; x を good-enough? の自由変数とすることで、明示的に引数に入れなくてよくなる。
+; ブロック構造は Algol 60 が始めた。プログラムを構造化するのにとても便利。

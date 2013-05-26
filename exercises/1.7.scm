@@ -35,6 +35,7 @@
 (print big)
 ;(print (my-sqrt big))
 ;止まらない
+;floatの精度が閾値より大きくなるから
 (print (sqrt big))
 
 ; 改善案を実装してみる。
