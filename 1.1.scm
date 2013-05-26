@@ -406,7 +406,7 @@ circumference
    (+ a 1))
 
 ; [回答](exercises/1.1.scm)
-
+;
 ; ### 問題 1.2
 ; 
 ; 問題文省略
