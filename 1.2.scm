@@ -439,6 +439,8 @@ b^n = b * b^(n-1)  ; b が奇数
 ; 手続きをつくりなさい。
 ; adding, doubling, halving を使って。
 ;
+; [回答](exercises/1.18.scm)
+;
 ; ### 問題 1.19
 ;
 ; Fib(n)を賢く計算する方法がある。
@@ -468,3 +470,5 @@ b^n = b * b^(n-1)  ; b が奇数
                         p
                         q
                         (- count 1)))))
+
+; [回答](exercises/1.19.scm)
