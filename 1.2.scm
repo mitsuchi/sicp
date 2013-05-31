@@ -337,3 +337,134 @@ fib 4
 ;
 ; 両替の問題で11セントをやったときの計算プロセスがどうなるか描きなさい。
 ; ステップと領域量のオーダーは？
+;
+; [回答](exercises/1.14.scm)
+;
+; ### 問題 1.15
+;
+; sin x を計算するためには
+; sin x = 3 sin (x/3) - 4 sin^3 (x/3)
+; で sin の引数を小さくしていって、十分小さくなったら
+; sin x ~ x の近似で sin x = xとしてやればいい。
+
+(define (cube x) (* x x x))
+(define (p x) (- (* 3 x) (* 4 (cube x))))
+(define (sine angle)
+   (if (not (> (abs angle) 0.1))
+       angle
+       (p (sine (/ angle 3.0)))))
+
+; a. (sine 12.15) を評価すると p が何回適用されるか？
+; b. (sine a)のステップ数と領域量のオーダーは？
+;
+; [回答](exercises/1.15.scm)
+;
+; 1.2.4 べき乗
+;
+; べき乗の計算は普通に書くとこうなる。
+
+(define (expt b n)
+  (if (= n 0)
+      1
+      (* b (expt b (- n 1)))))
+
+; これは計算量がO(n)で領域量がO(n)
+; 繰り返しプロセスにするのも簡単。
+
+(define (expt b n)
+  (expt-iter b n 1))
+
+(define (expt-iter b counter product)
+  (if (= counter 0)
+      product
+      (expt-iter b
+                (- counter 1)
+                (* b product)))) 
+
+; こっちは計算量がO(n)で領域量はO(1)
+;
+; ただし頭がいい方法があって、b^8 なら
+
+b^2 = b * b
+b^4 = b^2 * b^2
+b^8 = b^4 * b^4
+
+; みたいにすればかけ算は3回で住む。つまりO(log n)
+; 一般化すると、
+
+b^n = (b^(n/2))^2  ; b が偶数
+b^n = b * b^(n-1)  ; b が奇数
+
+; となるから
+
+(define (fast-expt b n)
+  (cond ((= n 0) 1)
+        ((even? n) (square (fast-expt b (/ n 2))))
+        (else (* b (fast-expt b (- n 1))))))
+
+(define (even? n)
+  (= (remainder n 2) 0))
+
+; で計算できる。
+; 繰り返しプロセスでも計算できるけど、再帰的な書き方みたいに
+; まっすぐ書くのは難しい。
+;
+; ### 問題 1.16
+;
+; fast-expt を繰り返しプロセスで書き直しなさい。
+; ヒント：
+; 最終的に答えを表すことになる変数を a として、
+; aを1から始めて、ステップが進んでも a * b^n が一定となるように
+; aを変化させていく。その際に (b^(n/2))^2 = (b^2)^(n/2) を使う。
+;
+; [回答](exercises/1.16.scm)
+;
+; ### 問題 1.17
+;
+; かけ算は足し算の繰り返しで計算できる。こんなふうに。
+
+(define (* a b)
+  (if (= b 0)
+      0
+      (+ a (* a (- b 1)))))
+
+; 2倍にするdoubleと半分にするhalveを使って、
+; fast-exptみたいにO(log n)なfast-multをつくりなさい。
+;
+; [回答](exercises/1.17.scm)
+;
+; ### 問題 1.18
+;
+; 問題1.16と1.17の結果から、O(log n)でかけ算する繰り返しプロセスな
+; 手続きをつくりなさい。
+; adding, doubling, halving を使って。
+;
+; ### 問題 1.19
+;
+; Fib(n)を賢く計算する方法がある。
+; a <- a + b
+; b <- a
+; な変換をTとすると、T^n(1,0) = (Fib(n+1),Fib(n))となる。
+; Tを一般化して T(p,q) として
+; a <- bq + aq + ap
+; b <- bp + aq
+; とすると、TはT(0,1)と同じ。
+; 
+; 1. T^2(p,q) は T(P,Q) と同じなことを示せ。その際の P と Q は？
+; 2. その結果を使って fib を以下のように定義したときの <??> を埋めなさい。
+
+(define (fib n)
+  (fib-iter 1 0 0 1 n))
+(define (fib-iter a b p q count)
+  (cond ((= count 0) b)
+        ((even? count)
+         (fib-iter a
+                   b
+                   <??>      ; compute p'
+                   <??>      ; compute q'
+                   (/ count 2)))
+        (else (fib-iter (+ (* b q) (* a q) (* a p))
+                        (+ (* b p) (* a q))
+                        p
+                        q
+                        (- count 1)))))
