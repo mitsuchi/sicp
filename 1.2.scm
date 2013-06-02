@@ -640,3 +640,38 @@ b^n = b * b^(n-1)  ; b が奇数
 ; 沿ってないなら理由は？
 ;
 ; [回答](exercises/1.24.scm)
+;
+; ### 問題 1.25
+; 
+; expmode をこう書いたらだめ？
+
+(define (expmod base exp m)
+  (remainder (fast-expt base exp) m))
+
+; [回答](exercises/1.25.scm)
+;
+; ### 問題 1.26
+;
+; 次の書き方ではうまく高速化しない。
+
+(define (expmod base exp m)
+  (cond ((= exp 0) 1)
+        ((even? exp)
+         (remainder (* (expmod base (/ exp 2) m)
+                       (expmod base (/ exp 2) m))
+                    m))
+        (else
+         (remainder (* base (expmod base (- exp 1) m))
+                    m))))
+
+; 具体的には O(log n)のはずが O(n) になる。なぜか？
+;
+; [回答](exercises/1.26.scm)
+;
+; ### 問題 1.27
+;
+; カーマイケル数がフェルマーテストを通ってしまうことを確認せよ。
+; カーマイケル数は、素数じゃないのにフェルマーテストを通る数。
+; 例えば 561, 1105, 1729, 2465, 2821, 6601
+;
+; [回答](exercises/1.27.scm)
