@@ -123,8 +123,75 @@
 30
 
 (define acc2 (make-account 100))
+
 ; とすると acc と acc2 は完全に独立なことに注意。
 ;
 ; ## ex 3.1
 ; ## ex 3.2
-; 
+; ## ex 3.3
+; ## ex 3.4
+;
+; 3.1.2 代入を導入する利点
+; ------------------------
+;
+; 代入を導入するとやっかいな点もあるけど、便利なことも多い。
+; 例えば乱数。正確には擬似乱数。
+
+x2 = (rand-update x1)
+x3 = (rand-update x2)
+
+; みたいに、rand-update が次の擬似乱数を返すことを考える。
+
+(define rand
+  (let ((x random-init))
+    (lambda ()
+      (set! x (rand-update x))
+      x)))
+
+; として「今の」乱数xをローカルに持つと便利。
+; そうじゃないと、乱数を使う場所それぞれで管理の必要があって大変。
+; 例えばモンテカルロ・シミュレーションを考える。
+;
+; ランダムに選んだ2つの整数が互いに素な確率は 6 / Pi^2
+; なので sqrt(n回目の試行までの確率/6) は Pi に近づく
+
+(define (estimate-pi trials)
+  (sqrt (/ 6 (monte-carlo trials cesaro-test))))
+(define (cesaro-test)
+   (= (gcd (rand) (rand)) 1))
+(define (monte-carlo trials experiment) ; trials = 試行回数, experiment = 試行して結果を返す手続き
+  (define (iter trials-remaining trials-passed)
+    (cond ((= trials-remaining 0)
+           (/ trials-passed trials))
+          ((experiment)
+           (iter (- trials-remaining 1) (+ trials-passed 1)))
+          (else
+           (iter (- trials-remaining 1) trials-passed))))
+  (iter trials 0))
+
+; 上のようにすると、monte-carlo が何してるかわかりやすい。
+; 代入を使わないと、「今の乱数」があちこちに漏れだしてモジュール性が失われる。
+
+(define (estimate-pi trials)
+  (sqrt (/ 6 (random-gcd-test trials random-init))))
+(define (random-gcd-test trials initial-x)
+  (define (iter trials-remaining trials-passed x)
+    (let ((x1 (rand-update x)))
+      (let ((x2 (rand-update x1)))
+        (cond ((= trials-remaining 0)   
+               (/ trials-passed trials))
+              ((= (gcd x1 x2) 1)
+               (iter (- trials-remaining 1)
+                     (+ trials-passed 1)
+                     x2))
+              (else
+               (iter (- trials-remaining 1)
+                     trials-passed
+                     x2))))))
+  (iter trials 0 initial-x))
+
+; ここでは乱数を2つ使うから x1 と x2があるけど、3個使うかもしれない。
+; もっと面倒になる。
+;
+; 内部状態を局所変数に、時間による変化を代入によって表すといい感じ。
+; ただしやっかいな点もあって後で述べる。
