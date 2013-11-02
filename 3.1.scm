@@ -195,3 +195,76 @@ x3 = (rand-update x2)
 ;
 ; 内部状態を局所変数に、時間による変化を代入によって表すといい感じ。
 ; ただしやっかいな点もあって後で述べる。
+;
+; ### ex 3.5
+; ### ex 3.6
+;
+; 3.1.3 代入を導入するコスト
+; -------------------------
+;
+; 代入によって状態が表現できていい感じ。
+; でも置き換えモデルが使えなくなった。
+; 
+; これまでは同じ引数で同じ手続きを呼び出したら同じ結果が返った。
+; こういう、代入を使わないモデルを関数プログラミングという。
+;
+; 代入によって事態がどう複雑になるかの例。
+
+(define (make-simplified-withdraw balance)  ; 残高チェックをしない引き落とし
+  (lambda (amount)
+    (set! balance (- balance amount))
+    balance))
+(define W (make-simplified-withdraw 25))
+(W 20)
+5
+(W 10)
+- 5
+
+; これを、代入を使わない以下のものと比べる。
+
+(define (make-decrementer balance)
+  (lambda (amount)
+    (- balance amount)))
+
+; 結果はこう
+
+(define D (make-decrementer 25))
+(D 20)
+5
+(D 10)
+15
+
+; これについては置き換えモデルが使えるので、こう変換できる。
+
+(D 20)
+; D を置き換え
+((make-decrementer 25) 20)
+; make-decrementer を置き換え
+((lambda (amount) (- 25 amount)) 20)
+; 手続きを適用
+(- 25 20)
+; 
+5
+
+; いっぽう make-decrementer だと
+
+(W 20)
+; W を置き換え
+((make-simplified-withdraw 25) 20)
+; make-simplified-withdraw を置き換え
+((lambda (amount) (set! balance (- 25 amount)) 25) 20)
+; 手続きを適用
+(set! balance (- 25 20)) 25
+; つまり25。でも違う。
+
+  (lambda (amount)
+    (set! balance (- balance amount))  ; この balanceと 
+    balance))                          ; この balanceは値が違うので区別しないといけない
+
+; 置き換えモデルでは、変数名は値につけられた名前だった。
+; 代入を認めると、変数名は値が保存された場所への参照になる。
+; 3.2の環境で詳しくやるよ。
+; 
+; 同一性と変化
+; ------------
+
