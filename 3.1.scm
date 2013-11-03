@@ -267,4 +267,11 @@ x3 = (rand-update x2)
 ; 
 ; 同一性と変化
 ; ------------
+;
+; 問題は本質的。たとえば同一性。
 
+(define D1 (make-decrementer 25))
+(define D2 (make-decrementer 25))
+
+; この2つ同じに思える。
+; どちらも同じ入力に対して同じ出力を返すので。
