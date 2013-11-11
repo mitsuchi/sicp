@@ -273,5 +273,67 @@ x3 = (rand-update x2)
 (define D1 (make-decrementer 25))
 (define D2 (make-decrementer 25))
 
-; この2つ同じに思える。
+; この2つは同じに思える。
 ; どちらも同じ入力に対して同じ出力を返すので。
+; プログラム中でD1とD2を入れ替えても結果が変わらない。
+
+(define W1 (make-simplified-withdraw 25))
+(define W2 (make-simplified-withdraw 25))
+
+; は事情が違う。
+
+(W1 20)
+5
+(W1 20)
+- 15
+(W2 20)
+5
+
+; となって、W1とW2は入れ替えられない。
+; D1とD2みたいに、同じものは入れ替えられるのを参照透過性という。
+; set!を導入すると参照透過でなくなる。こうなると同一性の判断が難しい。
+; 
+; たとえば
+
+(define peter-acc (make-account 100))
+(define paul-acc (make-account 100))
+
+; と
+
+(define peter-acc (make-account 100))
+(define paul-acc peter-acc)
+
+; は事情が全然違う。前者は別アカウント、後者は同一アカウント。
+; ただし、値を参照するだけで操作できない場合は、前者の違いは微妙。
+;
+; 命令型プログラミングの落とし穴 
+; ------------------------------
+;
+; 代入をよく使うスタイルを命令型プログラミングという。
+; 関数型にはないバグを生みやすい。
+
+(define (factorial n)
+  (define (iter product counter)
+    (if (> counter n)
+        product
+        (iter (* counter product)
+              (+ counter 1))))
+  (iter 1 1))
+
+; この繰り返し型の階乗の計算を命令型にしてみる。
+
+(define (factorial n)
+  (let ((product 1)
+        (counter 1))
+    (define (iter)
+      (if (> counter n)
+          product
+          (begin (set! product (* counter product))  ; これと
+                 (set! counter (+ counter 1))        ; これの順番に注意
+                 (iter))))
+    (iter)))
+
+; 上の２行の順番を逆にしたら計算結果が違ってくる。
+;
+; ## ex 3.7
+; ## ex 3.8
