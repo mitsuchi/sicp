@@ -16,20 +16,32 @@
 ;\f -> (\x -> (f ((n f) x)))
 
 ; one =>
-(add-1 zero)
-(lambda (f) (lambda (x) (f ((zero f) x))))
-                            --------
-(lambda (f) (lambda (x) (f ((lambda (x) x) x))))
-                           -------------------
-(lambda (f) (lambda (x) (f x)))
+(define one (add-1 zero))
+;(lambda (f) (lambda (x) (f ((zero f) x))))
+;                            --------
+;(lambda (f) (lambda (x) (f ((lambda (x) x) x))))
+;                           -------------------
+;(lambda (f) (lambda (x) (f x)))
 
 ; two =>
-(add-1 one)
-(lambda (f) (lambda (x) (f ((one f) x)))))
-                            -------
-(lambda (f) (lambda (x) (f (  ((lambda (f) (lambda (x) (f x))) f)   x))))
-                              -----------------------------------
+(define two (add-1 one))
+;(lambda (f) (lambda (x) (f ((one f) x)))))
+;                            -------
+;(lambda (f) (lambda (x) (f (  ((lambda (f) (lambda (x) (f x))) f)   x))))
+;                              -----------------------------------
+;(lambda (f) (lambda (x) (f ((lambda (x) (f x)) x))))
+;                           ----------------------
+;(lambda (f) (lambda (x) (f (f x))))
 
-(lambda (f) (lambda (x) (f ((lambda (x) (f x)) x))))
-                           ----------------------
-(lambda (f) (lambda (x) (f (f x))))
+; n は f を与えられたらそれを任意の x に n 回適用するような手続き
+; なので n + m は、f が与えられたらそれを任意の x に n+m回適用するような手続き
+
+(define (+ n m)
+  (lambda (f) (lambda (x) ((m f) ((n f) x)))))
+
+(define three (+ one two))
+(define six (+ three three))
+
+(display 
+  ((six (lambda (x) (* x 2))) 1)) ; 2^6 = 64
+(newline)
