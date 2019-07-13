@@ -1,6 +1,9 @@
 (define true #t)
 (define false #f)
 (define nil (list))
+(define (puts x)
+  (display x)
+  (newline))
 
 (define random-max 2147483647)
 (define (rand-update x)
