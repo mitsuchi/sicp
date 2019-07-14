@@ -27,3 +27,14 @@
     (enumerate-interval 1 n))) ; 1. 1からnまでのリストのそれぞれの要素iについて
 
 (puts (unique-triples 4)) ; => ((3 2 1) (4 2 1) (4 3 1) (4 3 2))
+
+; これで3つの和が s になるものを見つける。
+
+(define (same-sum-triples n s)
+  (filter (sum-is? s) (unique-triples n)))
+
+(define (sum-is? s)
+  (lambda (xs)
+    (= s (accumulate + 0 xs))))
+
+(puts (same-sum-triples 10 10)) ; => ((5 3 2) (5 4 1) (6 3 1) (7 2 1))
